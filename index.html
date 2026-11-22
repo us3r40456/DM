@@ -74,6 +74,13 @@ main { position:relative; z-index:3; width:min(94vw,1100px); padding:30px 18px; 
 @media(max-width:600px){.audio-launch{left:max(12px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));padding:9px 10px;font-size:9px}.audio-modal{padding:10px}.audio-panel-head{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.audio-modal{transition:none}}
 
+
+.audio-launch.is-playing{border-color:rgba(224,240,245,.75);background:rgba(25,42,49,.9);box-shadow:0 0 28px rgba(136,190,205,.22),inset 0 0 18px rgba(136,175,188,.08)}
+.audio-launch.is-playing svg{animation:audio-pulse .85s steps(2,end) infinite}
+@keyframes audio-pulse{50%{opacity:.35;filter:blur(.5px)}}
+.audio-button-text{display:flex;flex-direction:column;gap:4px;text-align:left}
+.audio-button-text small{color:rgba(177,203,212,.64);font-size:8px;font-weight:500;letter-spacing:.15em}
+
 </style>
 </head>
 <body>
@@ -95,46 +102,46 @@ main { position:relative; z-index:3; width:min(94vw,1100px); padding:30px 18px; 
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.73 5.1a18.2 18.2 0 0 0-4.48-1.39.07.07 0 0 0-.07.03c-.2.35-.42.81-.58 1.17a16.8 16.8 0 0 0-5.04 0c-.16-.36-.39-.82-.59-1.17a.07.07 0 0 0-.07-.03A18.15 18.15 0 0 0 4.42 5.1a.06.06 0 0 0-.03.03C1.55 9.38.77 13.53 1.16 17.62c0 .02.01.04.03.05a18.3 18.3 0 0 0 5.49 2.78.07.07 0 0 0 .08-.03c.42-.58.8-1.19 1.12-1.84a.07.07 0 0 0-.04-.1 12 12 0 0 1-1.72-.82.07.07 0 0 1-.01-.11c.12-.09.23-.18.34-.27a.07.07 0 0 1 .07-.01c3.6 1.64 7.5 1.64 11.06 0a.07.07 0 0 1 .07.01c.11.09.22.18.34.27a.07.07 0 0 1-.01.11c-.55.32-1.12.6-1.72.82a.07.07 0 0 0-.04.1c.33.65.7 1.26 1.12 1.84a.07.07 0 0 0 .08.03 18.25 18.25 0 0 0 5.5-2.78.07.07 0 0 0 .03-.05c.47-4.73-.79-8.84-3.25-12.49a.06.06 0 0 0-.03-.03ZM8.02 14.7c-1.08 0-1.97-.99-1.97-2.21s.87-2.21 1.97-2.21c1.1 0 1.99 1 1.97 2.21 0 1.22-.87 2.21-1.97 2.21Zm7.96 0c-1.08 0-1.97-.99-1.97-2.21s.87-2.21 1.97-2.21c1.1 0 1.99 1 1.97 2.21 0 1.22-.87 2.21-1.97 2.21Z"/></svg>
     DISCORD
   </a>
-  <button class="audio-launch" id="audioLaunch" type="button" aria-haspopup="dialog" aria-controls="audioModal">
+  <button class="audio-launch" id="audioLaunch" type="button" aria-pressed="false" aria-label="Play audio">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.8c0-.78.85-1.26 1.52-.85l10.1 6.2a1 1 0 0 1 0 1.7l-10.1 6.2A1 1 0 0 1 8 18.2V5.8Z"/></svg>
-    PLAY AUDIO
+    <span class="audio-button-text">PLAY AUDIO<small>LOCAL TRANSMISSION // 00:53</small></span>
   </button>
-  <div class="audio-modal" id="audioModal" role="dialog" aria-modal="true" aria-label="Audio player" hidden>
-    <section class="audio-panel">
-      <header class="audio-panel-head">
-        <div>INCOMING TRANSMISSION<small>F*CK SOCIETY // MR. ROBOT EXCERPT</small></div>
-        <button class="audio-close" id="audioClose" type="button" aria-label="Close player">CLOSE ×</button>
-      </header>
-      <div class="audio-video" id="audioVideo"></div>
-      <p class="audio-source-note">LECTURE VIA YOUTUBE · AUDIO STARTS AFTER YOUR CLICK</p>
-    </section>
-  </div>
+  <audio id="siteAudio" preload="none" src="./audio.mp3"></audio>
 </div>
 <script>
 const video = document.querySelector('.signal video');
 if (video) { const p = video.play(); if (p && p.catch) p.catch(() => {}); }
 
+
 const audioLaunch = document.getElementById('audioLaunch');
-const audioModal = document.getElementById('audioModal');
-const audioVideo = document.getElementById('audioVideo');
-const audioClose = document.getElementById('audioClose');
-function openAudioModal() {
-  audioModal.hidden = false;
-  requestAnimationFrame(() => audioModal.classList.add('open'));
-  audioVideo.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/x_7fLko_CUM?autoplay=1&playsinline=1&rel=0" title="F*ck Society — VOSTFR, extrait Mr. Robot" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>';
-  document.body.style.overflow = 'hidden';
-  audioClose.focus();
+const siteAudio = document.getElementById('siteAudio');
+const audioButtonText = audioLaunch.querySelector('.audio-button-text');
+const playIcon = '<path d="M8 5.8c0-.78.85-1.26 1.52-.85l10.1 6.2a1 1 0 0 1 0 1.7l-10.1 6.2A1 1 0 0 1 8 18.2V5.8Z"/>';
+const pauseIcon = '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>';
+function setAudioButton(playing) {
+  audioLaunch.classList.toggle('is-playing',playing);
+  audioLaunch.setAttribute('aria-pressed',String(playing));
+  audioLaunch.setAttribute('aria-label',playing?'Pause audio':'Play audio');
+  audioLaunch.querySelector('svg').innerHTML = playing ? pauseIcon : playIcon;
+  audioButtonText.innerHTML = playing ? 'PAUSE AUDIO<small>TRANSMISSION IN PROGRESS</small>' : 'PLAY AUDIO<small>LOCAL TRANSMISSION // 00:53</small>';
 }
-function closeAudioModal() {
-  audioModal.classList.remove('open');
-  audioVideo.innerHTML = '';
-  document.body.style.overflow = '';
-  window.setTimeout(() => { audioModal.hidden = true; audioLaunch.focus(); }, 190);
-}
-audioLaunch.addEventListener('click', openAudioModal);
-audioClose.addEventListener('click', closeAudioModal);
-audioModal.addEventListener('click', event => { if (event.target === audioModal) closeAudioModal(); });
-document.addEventListener('keydown', event => { if (event.key === 'Escape' && !audioModal.hidden) closeAudioModal(); });
+audioLaunch.addEventListener('click', async () => {
+  if (siteAudio.paused) {
+    try {
+      await siteAudio.play();
+      setAudioButton(true);
+    } catch (error) {
+      audioButtonText.innerHTML = 'AUDIO UNAVAILABLE<small>CHECK audio.mp3 IN REPOSITORY</small>';
+    }
+  } else {
+    siteAudio.pause();
+    setAudioButton(false);
+  }
+});
+siteAudio.addEventListener('ended', () => setAudioButton(false));
+siteAudio.addEventListener('pause', () => setAudioButton(false));
+siteAudio.addEventListener('play', () => setAudioButton(true));
+
 </script>
 </body>
 </html>
